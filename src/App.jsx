@@ -147,7 +147,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app">
+    <div className={`app ${mode === 'walk' ? 'walk-mode' : 'city-mode'}`}>
       <Canvas
         shadows={!dev.lowPower}
         dpr={dev.lowPower ? [1, 1.25] : [1, 1.75]}

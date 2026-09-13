@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCity } from '../store.js';
 import { VIEWS } from '../scene/Scene.jsx';
-import { POIS, exploreProgress, levelOf, characterById } from '../lib/player.js';
+import { POIS, exploreProgress, levelOf } from '../lib/player.js';
 import { playerRuntime } from '../scene/playerRuntime.js';
 import { CharacterSelect } from './CharacterSelect.jsx';
 import { useDevice } from './useDevice.js';
@@ -48,7 +48,6 @@ export function Hud() {
   const setTimeSpeed = useCity((s) => s.setTimeSpeed);
   const coins = useCity((s) => s.coins);
   const player = useCity((s) => s.player);
-  const charId = useCity((s) => s.charId);
   const perf = useCity((s) => s.perf);
   const setPerf = useCity((s) => s.setPerf);
   const [menu, setMenu] = useState(false);
@@ -93,8 +92,7 @@ export function Hud() {
       <div className="hud-bar">
         <div className="hb-left">
           <span className="hb-coins" title="Kredyty">🪙 {coins?.toLocaleString('pl-PL')}</span>
-          <span className="hb-clock" title="Czas w mieście">🕒 {clock}</span>
-          {walk && <span className="hb-xp" title="Poziom i odkrycia">⭐ {lvl.level} <i className="xpbar"><b style={{ width: `${lvl.need ? (lvl.into / lvl.need) * 100 : 100}%` }} /></i> {player.xp} XP · 🗺️ {prog.done}/{prog.total}</span>}
+          {!walk && <span className="hb-clock" title="Czas w mieście">🕒 {clock}</span>}
         </div>
         <div className="hb-right">
           {/* 🎮 gra ↔ kamera miasta: przycisk widoczny ZAWSZE (także na tablecie/telefonie) */}
@@ -103,7 +101,7 @@ export function Hud() {
             title={walk ? 'Wróć do kamery miasta' : 'Tryb gry: chodź po mieście i wsiądź do auta'}
             onClick={() => useCity.getState().setMode(walk ? 'iso' : 'walk')}
           >
-            <span className="bi">{walk ? '🚶' : '🎮'}</span><span>{walk ? 'SPACER' : 'GRAJ'}</span>
+            <span className="bi">{walk ? '←' : '🎮'}</span><span>{walk ? 'MIASTO' : 'GRAJ'}</span>
           </button>
           {/* desktop: widoki i czas na wierzchu */}
           <div className="hud-desktop">
@@ -139,7 +137,7 @@ export function Hud() {
       </div>
 
       {/* co się dzieje teraz w mieście */}
-      {feed.length > 0 && (
+      {!walk && feed.length > 0 && (
         <div className="hud-feed">
           {feed.map((e) => <span key={e.id}>{e.emoji} {e.name}</span>)}
         </div>
@@ -198,15 +196,9 @@ export function Hud() {
       {walk && (
         <>
           <div className="walk-cross" aria-hidden="true" />
-          <div className="walk-chip">
-            <b>{characterById(charId).name}</b> · {characterById(charId).role}
-            {player.nearest && <span> · najbliżej: <b>{player.nearest.name}</b> ({player.nearest.distance} m)</span>}
-          </div>
-          <button className="walk-exit" onClick={() => setMode('iso')}>✕ Wyjdź ze spaceru</button>
           {touch && (
             <div className="walk-touch">
               <button className="wt-btn" onPointerDown={() => (playerRuntime.want.jump = true)}>SKOK</button>
-              <button className="wt-btn" onPointerDown={() => (playerRuntime.want.run = true)} onPointerUp={() => (playerRuntime.want.run = false)} onPointerLeave={() => (playerRuntime.want.run = false)}>BIEG</button>
             </div>
           )}
 

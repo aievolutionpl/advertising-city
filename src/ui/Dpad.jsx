@@ -1,7 +1,6 @@
 // Stałe sterowanie POV na telefonie/tablecie: ruch wielodotykowy bez „zaciętych” osi.
 import React, { useEffect, useRef } from 'react';
 import { input } from '../scene/input.js';
-import { useCity } from '../store.js';
 
 const DIR = { forward: [0, -1], back: [0, 1], left: [-1, 0], right: [1, 0] };
 
@@ -16,7 +15,6 @@ function ArrowIcon({ direction }) {
 }
 
 export function Dpad() {
-  const setMode = useCity((s) => s.setMode);
   const active = useRef(new Map());
 
   const sync = () => {
@@ -60,7 +58,6 @@ export function Dpad() {
 
   return (
     <section className="dpad-wrap" aria-label="Sterowanie ruchem POV">
-      <div className="dpad-title"><b>RUCH POV</b><span>Przytrzymaj · ekranem obracasz kamerę</span></div>
       <div className="dpad">
         {directionButton('forward', 'PRZÓD', 'u')}
         {directionButton('left', 'LEWO', 'l')}
@@ -72,7 +69,6 @@ export function Dpad() {
         {directionButton('right', 'PRAWO', 'r')}
         {directionButton('back', 'TYŁ', 'd')}
       </div>
-      <button className="dpad-city" onClick={() => setMode('iso')}>← Kamera miejska</button>
     </section>
   );
 }
