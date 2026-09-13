@@ -185,7 +185,7 @@ export default function App() {
 
       <Hud />
       {!started && <Intro />}
-      {started && mode === 'walk' && <Dpad />}
+      {started && mode === 'walk' && (dev.touch || dev.w <= 1100) && <Dpad />}
       {started && <Panel />}
       {started && <AiPanel />}
       <Toast />

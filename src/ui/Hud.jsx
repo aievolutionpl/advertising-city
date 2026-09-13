@@ -54,7 +54,8 @@ export function Hud() {
   const [menu, setMenu] = useState(false);
   const [help, setHelp] = useState(true);
   const dev = useDevice();
-  const touch = dev.touch;
+  // Tablet landscape / responsywny viewport też dostaje pełne kontrolki, nie tylko touch-UA.
+  const touch = dev.touch || dev.w <= 1100;
   const feed = eventFeed(dayRuntime.hours);
   const walk = mode === 'walk';
   const drive = useCity((s) => s.drive);

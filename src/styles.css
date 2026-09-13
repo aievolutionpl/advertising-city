@@ -383,30 +383,56 @@ html, body, #root {
 
 /* ---------- DPAD ---------- */
 .dpad-wrap {
-  position: absolute;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  left: 16px;
+  position: fixed;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  left: max(14px, env(safe-area-inset-left, 0px));
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  z-index: 12;
+  align-items: flex-start;
+  gap: 8px;
+  z-index: 24;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 6px; }
+.dpad-title {
+  display: flex; flex-direction: column; gap: 2px; padding: 7px 11px;
+  color: #f4fbff; background: rgba(3, 10, 18, .9); border: 1px solid rgba(0, 231, 255, .5);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.35); backdrop-filter: blur(12px);
+  font-size: 10px; line-height: 1.2; letter-spacing: .04em;
+}
+.dpad-title b { color: #7cff1e; font-size: 11px; letter-spacing: .13em; }
+.dpad-title span { color: #d9ebf5; }
+.dpad {
+  display: grid;
+  grid-template-areas: '. u .' 'l c r' '. d .';
+  grid-template-columns: repeat(3, 64px);
+  grid-template-rows: repeat(3, 64px);
+  gap: 7px;
+}
 .dpad-btn {
-  font-family: var(--font);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  min-width: 64px; min-height: 64px; padding: 5px 3px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-family: var(--font); font-size: 9px; line-height: 1; letter-spacing: .06em; font-weight: 900;
+  color: #f6fcff; background: linear-gradient(155deg, rgba(17,35,51,.96), rgba(3,10,18,.94));
+  border: 2px solid rgba(0, 231, 255, .72); border-radius: 17px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 8px 22px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.14);
   backdrop-filter: blur(12px);
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.dpad-btn:active { background: var(--sky-soft); }
-.dpad-btn.run { grid-column: span 3; font-size: 12px; letter-spacing: 0.08em; }
+.dpad-icon { width: 29px; height: 29px; flex: 0 0 auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+.dpad-btn:active, .dpad-btn[aria-pressed='true'] {
+  color: #031016; background: linear-gradient(180deg, #7cff1e, #38db76);
+  border-color: #eaffd8; transform: translateY(1px) scale(.97);
+}
+.dpad-run { color: #101800; background: linear-gradient(160deg, #dfff43, #7cff1e); border-color: #efffb7; }
+.dpad-city {
+  min-height: 44px; padding: 0 14px; color: #f4fbff; background: rgba(3,10,18,.92);
+  border: 1px solid rgba(255,255,255,.4); border-radius: 12px; font: 800 11px/1 var(--font);
+  touch-action: manipulation;
+}
 
 /* ---------- MOBILE ---------- */
 @media (max-width: 860px) {
@@ -432,8 +458,7 @@ html, body, #root {
   .card { padding: 20px; border-radius: 18px; }
   .card h1 { font-size: 24px; }
   .grid3 { grid-template-columns: 1fr 1fr; }
-  .dpad { grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(3, 58px); }
-  .dpad-wrap { left: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .dpad-wrap { left: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
   .hint { bottom: auto; top: 52px; font-size: 11px; left: 10px; right: 10px; transform: none; max-width: none; }
   .clause { right: 8px; left: 8px; justify-content: center; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
