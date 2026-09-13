@@ -80,6 +80,37 @@ export function buildSidewalks() {
 
 export const SIDEWALKS = buildSidewalks();
 
+/** Latarnie: stoją na CHODNIKU wokół kwartału (pas 8..10 od środka bloku), nigdy na jezdni (10..18).
+ *  Uwaga: środek jezdni to pitch/2 = 14 — wcześniejsza wersja stawiała latarnie dokładnie tam
+ *  („dziwne lampy na środku ulicy", zgłoszenie użytkownika). */
+export const LAMP_OFF = 9;                 // środek pasa chodnika
+export const LAMP_SIDE = [-6.5, 0, 6.5];   // rozstaw wzdłuż krawędzi (blok ma półszerokość 8)
+
+export function buildLampPosts() {
+  const out = [];
+  for (const bx of BLOCK_CENTERS) {
+    for (const bz of BLOCK_CENTERS) {
+      for (const t of LAMP_SIDE) {
+        out.push({ x: bx + t, z: bz + LAMP_OFF });
+        out.push({ x: bx + t, z: bz - LAMP_OFF });
+        out.push({ x: bx + LAMP_OFF, z: bz + t });
+        out.push({ x: bx - LAMP_OFF, z: bz + t });
+      }
+    }
+  }
+  return out;
+}
+
+export const LAMP_POSTS = buildLampPosts();
+
+/** Skrzyżowania z realnym światłem punktowym (koszt GPU) — środek + dwa węzły.
+ *  Współrzędne = realne słupki latarni, żeby światło nie wisiało w losowym miejscu. */
+export const LAMP_LIGHTS = [
+  { x: 9, z: 0 },
+  { x: -34.5, z: 37 },
+  { x: 34.5, z: -37 },
+];
+
 /** Drzewa i krzaki — deterministyczny PRNG (ten sam las na każdym urządzeniu). */
 export function buildTrees() {
   const trees = [];

@@ -134,6 +134,7 @@ export default function App() {
       car: () => window.__car?.state() || null,
       cars: () => window.__car?.cars() || [],
       enterCar: () => window.__car?.enter(),
+      summonCar: () => window.__car?.summon(),
       exitCar: () => window.__car?.exit(),
       drive: () => useCity.getState().drive,
       setDay: (h) => useCity.getState().setDayOverride(h),

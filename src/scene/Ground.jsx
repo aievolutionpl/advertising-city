@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { CITY, ROADS, SIDEWALKS, TREES, PLOTS, BLOCK_CENTERS } from '../data/city.js';
 import { useCity } from '../store.js';
-import { rentCost, buildCost } from '../lib/economy.js';
+import { purchaseCost } from '../lib/economy.js';
 
 const FONT = '"Inter", "Segoe UI", "DejaVu Sans", Arial, sans-serif';
 
@@ -220,8 +220,8 @@ function plotPadTexture(price) {
   return t;
 }
 
-function FreePlot({ plot, selected, onSelect }) {
-  const price = rentCost(plot) + buildCost(plot);
+function FreePlot({ plot, selected, onSelect, shape }) {
+  const price = purchaseCost(plot, shape);
   const label = useMemo(() => plotPadTexture(price), [price]);
   const color = selected ? '#7CFF1E' : '#00E7FF';
   const half = plot.w / 2;
@@ -254,11 +254,12 @@ export function FreePlots() {
   const buildings = useCity((s) => s.buildings);
   const selected = useCity((s) => s.selected);
   const select = useCity((s) => s.select);
+  const shape = useCity((s) => s.buildShape);
   const free = useMemo(() => PLOTS.filter((p) => !p.park && !buildings[p.id]), [buildings]);
   return (
     <group>
       {free.map((p) => (
-        <FreePlot key={p.id} plot={p} selected={selected === p.id} onSelect={select} />
+        <FreePlot key={p.id} plot={p} selected={selected === p.id} onSelect={select} shape={shape} />
       ))}
     </group>
   );

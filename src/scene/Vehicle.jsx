@@ -111,6 +111,17 @@ export function Vehicles() {
       enter: () => { driveWant.enter = true; },
       exit: () => { driveWant.exit = true; },
       state: () => (state.current ? { ...state.current, kmh: speedKmh(state.current.speed) } : null),
+      /* wsiadanie „na zawołanie" — do auta można dojść, ale na dotyku to męka;
+         przywołanie: najbliższe zaparkowane auto + gracz obok + wejście */
+      summon: () => {
+        if (state.current) { driveWant.exit = true; return true; }
+        const c = nearestCar(carsRef.current, playerRuntime.x, playerRuntime.z, 1e6);
+        if (!c) { toastMsg?.('🚗 Brak aut w mieście — postaw najpierw budynek'); return false; }
+        playerRuntime.x = c.x + 2.0;
+        playerRuntime.z = c.z;
+        driveWant.enter = true;
+        return true;
+      },
       cars: () => carsRef.current.map((c) => ({ id: c.id, x: +c.x.toFixed(1), z: +c.z.toFixed(1), color: c.color })),
       count: () => carsRef.current.length,
     };

@@ -87,15 +87,17 @@ export const useCity = create((set, get) => ({
   toastMsg: (toast) => set({ toast }),
 
   buy: (plotId) => {
-    const res = purchasePlot(get(), plotById(plotId), get().buildShape);
+    const shape = get().buildShape;
+    const res = purchasePlot(get(), plotById(plotId), shape);
     if (!res.ok) return set({ toast: res.error });
-    set({ ...res.state, selected: plotId, toast: `🏗️ Budynek (${SHAPES[get().buildShape]?.label || 'wieżowiec'}) postawiony! −${res.spent} AC` });
+    set({ ...res.state, selected: plotId, toast: `🏗️ ${SHAPES[shape]?.label || 'Budynek'} gotowy · −${res.spent} AC · saldo ${res.state.coins} AC` });
     get().persist();
   },
   upgrade: (plotId) => {
     const res = upgradeBuilding(get(), plotId);
     if (!res.ok) return set({ toast: res.error });
-    set({ ...res.state, toast: `Rozbudowano! −${res.spent} AC` });
+    const floors = res.state.buildings[plotId]?.floors;
+    set({ ...res.state, toast: `⬆️ Rozbudowano do ${floors} pięter · −${res.spent} AC · saldo ${res.state.coins} AC` });
     get().persist();
   },
   updateAd: (plotId, patch) => {

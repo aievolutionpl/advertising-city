@@ -3,41 +3,16 @@
 import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { CITY, BLOCK_CENTERS } from '../data/city.js';
+import { LAMP_POSTS, LAMP_LIGHTS } from '../data/city.js';
 import { dayRuntime } from './dayRuntime.js';
 import { lampMaterial } from './materials.js';
 
 const POLE = '#5b6470';
-const OFF = CITY.pitch / 2;          // środek chodnika wokół kwartału
-const IN_BLOCK = [-9.5, 0, 9.5];     // rozstaw latarni wzdłuż krawędzi kwartału
+// Pozycje słupków: LAMP_POSTS z data/city.js (chodnik wokół kwartału — nigdy jezdnia).
 
-/** Pozycje latarni na obwodzie każdego kwartału (4 krawędzie × 3 punkty). */
-export function lampPosts() {
-  const out = [];
-  for (const bx of BLOCK_CENTERS) {
-    for (const bz of BLOCK_CENTERS) {
-      for (const t of IN_BLOCK) {
-        out.push({ x: bx + t, z: bz + OFF });
-        out.push({ x: bx + t, z: bz - OFF });
-        out.push({ x: bx + OFF, z: bz + t });
-        out.push({ x: bx - OFF, z: bz + t });
-      }
-    }
-  }
-  return out;
-}
-
-/** Skrzyżowania z realnym światłem punktowym (koszt GPU) — środek + dwa główne węzły.
- *  Uwaga: każde światło punktowe = pętla w shaderze; na tabletach to zabójca (NUM_POINT_LIGHTS).
- *  W trybie lekkim SceneGate i tak gasi je całkowicie (visible=false). */
-export const LAMP_LIGHTS = [
-  { x: 0, z: 0 },
-  { x: BLOCK_CENTERS[1], z: BLOCK_CENTERS[1] },
-  { x: BLOCK_CENTERS[3], z: BLOCK_CENTERS[3] },
-];
-
+/** Pozycje latarni pochodzą z data/city.js (LAMP_POSTS) — jedno źródło prawdy dla sceny i testów. */
 export function Lamps() {
-  const posts = useMemo(lampPosts, []);
+  const posts = LAMP_POSTS;
   const poleRef = useRef();
   const bulbRef = useRef();
   const glowRef = useRef();
@@ -55,7 +30,7 @@ export function Lamps() {
       dummy.position.set(p.x, 4.32, p.z);
       dummy.updateMatrix();
       bulbRef.current.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(p.x, 4.30, p.z);
+      dummy.position.set(p.x, 0.06, p.z);   // łuna na chodniku (nie w powietrzu na 4,3 m)
       dummy.rotation.set(-Math.PI / 2, 0, 0);
       dummy.updateMatrix();
       glowRef.current.setMatrixAt(i, dummy.matrix);
@@ -80,7 +55,9 @@ export function Lamps() {
         <sphereGeometry args={[0.3, 10, 8]} />
         <primitive object={lampMaterial} attach="material" />
       </instancedMesh>
-      {/* rozproszona łuna pod latarnią — tania „poświata” bez dodatkowego światła */}
+      {/* rozproszona łuna pod latarnią — tania „poświata" bez dodatkowego światła.
+          Leży NA CHODNIKU (y≈0), wcześniej wisiała w powietrzu na wysokości 4,3 m
+          i wyglądała jak dziwny biały krążek nad środkiem ulicy. */}
       <instancedMesh ref={glowRef} args={[undefined, undefined, posts.length]}>
         <circleGeometry args={[1.6, 14]} />
         <primitive object={lampMaterial} attach="material" />

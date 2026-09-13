@@ -20,6 +20,13 @@ export function buildCost(plot) {
   return COSTS.buildBase + (plot?.district === 'core' ? 700 : 0);
 }
 
+/** Pełna cena widoczna w UI i używana przez reducer. Jedno źródło prawdy zapobiega
+ *  sytuacji, w której panel pokazuje inną kwotę niż faktycznie pobiera zakup. */
+export function purchaseCost(plot, shapeId = 'tower') {
+  const shape = SHAPES[shapeId] || SHAPES.tower;
+  return Math.max(400, rentCost(plot) + buildCost(plot) + shape.extra);
+}
+
 export function upgradeCost(floors) {
   return Math.round(COSTS.upgradeBase + COSTS.upgradeFactor * COSTS.upgradeBase * floors);
 }
@@ -62,7 +69,7 @@ export function purchasePlot(state, plot, shapeId = 'tower') {
   if (state.buildings[plot.id]) return { ok: false, state, error: 'Działka jest już zajęta.' };
   if (plot.park) return { ok: false, state, error: 'To teren zielony — nie można budować.' };
   const shape = SHAPES[shapeId] || SHAPES.tower;
-  const cost = Math.max(400, rentCost(plot) + buildCost(plot) + shape.extra);
+  const cost = purchaseCost(plot, shapeId);
   if (!canAfford(state, cost)) return { ok: false, state, error: `Za mało środków (brakuje ${cost - state.coins}).` };
   const id = `u-${plot.id}`;
   const building = {
@@ -132,6 +139,7 @@ export function sanitizeAd(patch = {}) {
 export function setAd(state, plotId, patch) {
   const b = state.buildings[plotId];
   if (!b) return { ok: false, state, error: 'Brak budynku.' };
+  if (b.owner !== 'player') return { ok: false, state, error: 'Możesz edytować tylko reklamę na własnym budynku.' };
   const ad = { ...b.ad, ...sanitizeAd(patch) };
   return { ok: true, state: { ...state, buildings: { ...state.buildings, [plotId]: { ...b, ad } } } };
 }

@@ -97,3 +97,256 @@
 
 /* plakietka: scena nic nie rysuje (wykryte przez __renderOk) */
 .perf-badge.is-broken { background: #ffe0e0; color: #8b1a1a; border-color: #ff9d9d; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HUD v3 — „kokpit": ciemne szkło na jasnym mieście = ZAWSZE czytelne.
+   Powód: menu miało białe tło, a przyciski jasny tekst → białe na białym.
+   Zasada: każdy element UI = ciemna mgła (6,13,22 ~0,8) + jasny tekst + cyjan.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --hud-glass: rgba(6, 13, 22, 0.80);
+  --hud-glass-2: rgba(6, 13, 22, 0.94);
+  --hud-line: rgba(255, 255, 255, 0.16);
+  --hud-line-cy: rgba(0, 231, 255, 0.32);
+  --hud-ink: #eaf6ff;
+  --hud-ink-dim: #9db4c7;
+  --hud-cyan: #00e7ff;
+  --hud-lime: #7cff1e;
+  --hud-shadow: 0 8px 24px rgba(2, 8, 16, 0.38);
+}
+
+/* ── pasek górny: ciemne pigułki, jasny tekst ─────────────────────────────── */
+.hud-bar { color: var(--hud-ink); gap: 8px; padding: 8px 10px; }
+.hb-coins, .hb-clock, .hb-xp {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  background: var(--hud-glass); color: var(--hud-ink);
+  border: 1px solid var(--hud-line); border-radius: 999px;
+  padding: 8px 13px; font: 700 13px/1 'Space Grotesk', system-ui, sans-serif;
+  backdrop-filter: blur(14px); box-shadow: var(--hud-shadow);
+}
+.hb-coins { color: #ffe6a3; }                                   /* kredyty = złote */
+.hb-clock { font-variant-numeric: tabular-nums; color: #d8ecff; }
+.hb-xp { color: #d8ecff; }
+.hb-xp b, .hb-coins b { color: #ffffff; }
+.xpbar { background: rgba(255, 255, 255, 0.18); }
+.xpbar b { background: linear-gradient(90deg, var(--hud-cyan), var(--hud-lime)); }
+
+/* ── segmenty i przyciski: ciemne szkło, wyraźny stan aktywny ─────────────── */
+.seg {
+  background: var(--hud-glass); border: 1px solid var(--hud-line);
+  border-radius: 14px; padding: 4px; gap: 4px; box-shadow: var(--hud-shadow);
+}
+/* Domyślne tło przycisku = ciemne szkło, bo pasek HUD siedzi POD nim na jasnym niebie.
+   (rgba 9% bieli + jasny tekst dawało 1,25:1 — czyli „białe na białym", zgłoszenie użytkownika) */
+.btn {
+  min-height: 42px; padding: 0 14px; border-radius: 12px;
+  color: var(--hud-ink); background: var(--hud-glass);
+  border: 1px solid var(--hud-line);
+  font: 700 13.5px/1 'Space Grotesk', system-ui, sans-serif;
+  box-shadow: var(--hud-shadow);
+}
+.btn .bi { font-size: 16px; }
+.btn:hover { background: rgba(0, 231, 255, 0.18); border-color: var(--hud-line-cy); color: #ffffff; }
+.btn.on {
+  background: linear-gradient(180deg, rgba(0, 231, 255, 0.92), rgba(0, 158, 180, 0.92));
+  border-color: var(--hud-cyan); color: #02171d; font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(0, 231, 255, 0.35) inset, 0 6px 16px rgba(0, 231, 255, 0.22);
+}
+.btn.primary {
+  background: linear-gradient(180deg, #7cff1e, #4fd40d); color: #04140a;
+  border-color: var(--hud-lime); font-weight: 800;
+  box-shadow: 0 6px 18px rgba(124, 255, 30, 0.26);
+}
+.btn.primary:hover { filter: brightness(1.06); color: #04140a; }
+.btn.primary.on { background: linear-gradient(180deg, #00e7ff, #009eb4); color: #02171d; border-color: var(--hud-cyan); }
+.btn.ghost { background: rgba(255, 255, 255, 0.06); color: var(--hud-ink-dim); }
+.btn.tiny { min-height: 38px; min-width: 42px; padding: 0 10px; font-size: 16px; border-radius: 10px; }
+
+/* 🎮 GRAJ / SPACER — główny przełącznik trybu (zawsze widoczny, także tablet) */
+.btn.play {
+  background: linear-gradient(180deg, #7cff1e, #47c40b); color: #04140a;
+  border-color: var(--hud-lime); font-weight: 800; letter-spacing: 0.02em;
+  box-shadow: 0 8px 20px rgba(124, 255, 30, 0.28);
+}
+.btn.play:hover { filter: brightness(1.07); color: #04140a; }
+.btn.play.on {
+  background: rgba(255, 255, 255, 0.08); color: var(--hud-lime);
+  border-color: var(--hud-lime); box-shadow: none;
+}
+.btn.game { min-height: 48px; font-size: 14.5px; }
+
+/* ── menu ☰: ciemne szkło (było białe z białym tekstem) ───────────────────── */
+.hud-menu {
+  background: var(--hud-glass-2); border: 1px solid var(--hud-line-cy);
+  border-radius: 20px; color: var(--hud-ink);
+  box-shadow: 0 22px 54px rgba(2, 8, 16, 0.5);
+  padding: 14px; gap: 10px;
+}
+.hud-menu .btn { color: var(--hud-ink); background: rgba(255, 255, 255, 0.07); }
+.hud-menu .btn:hover { background: rgba(0, 231, 255, 0.16); }
+.hud-menu .btn.on { background: linear-gradient(180deg, rgba(0, 231, 255, 0.92), rgba(0, 158, 180, 0.92)); color: #02171d; }
+.hud-menu .btn.primary { color: #04140a; }
+.hud-menu .btn.game { color: #eaffe0; background: linear-gradient(180deg, rgba(124, 255, 30, 0.22), rgba(124, 255, 30, 0.10)); border-color: rgba(124, 255, 30, 0.55); }
+.hm-label { font: 700 12px/1.2 'Space Grotesk', system-ui, sans-serif; color: var(--hud-ink-dim); letter-spacing: 0.06em; }
+.hud-menu .hm-row { gap: 8px; }
+
+/* ── spacer: podpowiedzi, krzyż, wyjście, kciuk ───────────────────────────── */
+.walk-chip { background: rgba(6, 13, 22, 0.86); border: 1px solid var(--hud-line-cy); color: var(--hud-ink); box-shadow: var(--hud-shadow); }
+.walk-exit { background: rgba(6, 13, 22, 0.86); border: 1px solid var(--hud-line); color: var(--hud-ink); box-shadow: var(--hud-shadow); }
+.walk-exit:hover { background: rgba(0, 231, 255, 0.2); border-color: var(--hud-cyan); }
+.walk-help { background: rgba(6, 13, 22, 0.9); border-color: var(--hud-line-cy); }
+.walk-touch .wt-btn, .wt-btn { background: rgba(6, 13, 22, 0.62); border-color: rgba(0, 231, 255, 0.45); color: #eaf6ff; }
+.walk-touch .wt-btn:active, .wt-btn:active { background: rgba(0, 231, 255, 0.4); color: #02171d; }
+
+/* ── D-pad (tablet/telefon): ciemne szkło zamiast jasnych pigułek ─────────── */
+.dpad-btn {
+  background: rgba(6, 13, 22, 0.66); color: #eaf6ff;
+  border: 1px solid var(--hud-line); border-radius: 14px;
+  box-shadow: var(--hud-shadow); backdrop-filter: blur(10px);
+}
+.dpad-btn:active { background: rgba(0, 231, 255, 0.42); color: #02171d; }
+.dpad-wrap .btn.primary { background: linear-gradient(180deg, #7cff1e, #4fd40d); color: #04140a; }
+
+/* ── pasek auta (wsiadanie / przywołanie) ────────────────────────────────── */
+.car-bar {
+  position: fixed; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex; justify-content: center; gap: 10px; z-index: 17; pointer-events: none;
+}
+.car-bar .car-enter { position: static; transform: none; pointer-events: auto; }
+@media (max-width: 820px) { .car-bar { bottom: calc(80px + env(safe-area-inset-bottom)); } }
+
+/* ── klauzula AI + toast: też na ciemnym szkle ───────────────────────────── */
+.clause { background: rgba(6, 13, 22, 0.72); border: 1px solid var(--hud-line); color: #cfe2f2; }
+.clause p { color: #dbe9f6; }
+.clause .btn.tiny.ghost { color: #bfe9ff; border-color: var(--hud-line-cy); }
+.toast { background: rgba(6, 13, 22, 0.92); border: 1px solid var(--hud-line-cy); color: #eaf6ff; }
+
+/* ── bardzo wąsko: graj + ☰ obok siebie, pigułki kompaktowe ──────────────── */
+@media (max-width: 820px) {
+  .hud-bar { gap: 6px; }
+  .hb-coins, .hb-clock { padding: 7px 11px; font-size: 12.5px; }
+  .btn.play { min-height: 44px; padding: 0 13px; font-size: 13px; }
+}
+@media (max-width: 420px) {
+  .btn.play span:not(.bi) { display: none; }   /* zostaje samo 🎮 */
+  .btn.play { min-width: 48px; padding: 0 12px; }
+}
+
+/* ── Jasne, solidne panele robocze. Ciemny HUD zostaje wyłącznie nad sceną. ── */
+.hud-menu,
+.panel,
+.ai-panel {
+  --ink: #152536;
+  --ink-soft: #40566b;
+  --ink-faint: #61758a;
+  --line: #d6e0e9;
+  --line-strong: #bdcad6;
+  background: #f8fbfd;
+  color: var(--ink);
+  border: 1px solid #c8d5e0;
+  backdrop-filter: none;
+  box-shadow: 0 18px 46px rgba(18, 38, 56, 0.22);
+}
+.hud-menu { border-radius: 16px; }
+.hud-menu .hm-label { color: #536b80; }
+.hud-menu .btn {
+  color: #20374a; background: #ffffff; border-color: #cbd7e1; box-shadow: none;
+}
+.hud-menu .btn:hover { color: #102739; background: #eaf6fb; border-color: #4ca9bb; }
+.hud-menu .btn.on { background: #bceef3; border-color: #158aa0; color: #062e38; box-shadow: none; }
+.hud-menu .btn.game { color: #17350f; background: #e2f8d4; border-color: #70b64d; }
+.hud-menu .egg { background: #edf3f7; color: #314b60; }
+.hud-menu .egg.done { background: #e0f4d5; color: #244717; }
+.hud-menu .egg b { color: inherit; }
+.hm-build-shortcut { display: grid; grid-template-columns: 1fr; padding-top: 4px; border-top: 1px solid #d6e0e8; }
+.hm-build-shortcut > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hm-build-shortcut > div > span { color: #536b80; font-size: 11px; text-align: right; }
+
+/* panel budowy: jeden poziom kart, mocna hierarchia i pełne 44 px */
+.panel { width: 410px; padding: 0; overflow: auto; }
+.panel-head {
+  position: sticky; top: 0; z-index: 2; margin: 0; padding: 16px 18px 14px;
+  background: #ffffff; border-bottom: 1px solid #d7e1e9;
+}
+.panel-head > div { display: grid; gap: 3px; min-width: 0; }
+.panel-head > div > b { font-size: 19px; color: #122536; }
+.panel-kicker, .eyebrow {
+  color: #137f92; font-size: 10px; line-height: 1; font-weight: 800; letter-spacing: .12em;
+}
+.panel-close { min-width: 44px; width: 44px; padding: 0; color: #334c61; background: #eef3f6; box-shadow: none; }
+.panel > .note, .panel > .box, .panel > .build-flow, .panel > .sec, .panel > .editor, .panel > a { margin-left: 18px; margin-right: 18px; }
+.build-flow { padding: 16px 0 20px; }
+.build-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 16px; }
+.build-steps span {
+  display: flex; align-items: center; gap: 6px; min-width: 0; color: #6a7d8e;
+  font-size: 11px; font-weight: 700;
+}
+.build-steps span::after { content: ''; height: 2px; flex: 1; background: #d9e2e9; }
+.build-steps span:last-child::after { display: none; }
+.build-steps i {
+  display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px;
+  border-radius: 50%; background: #e4ebf0; color: #526a7e; font-style: normal;
+}
+.build-steps .done i { background: #dff2d2; color: #2d641d; }
+.build-steps .active { color: #0f7182; }
+.build-steps .active i { background: #167f92; color: #fff; }
+.build-section { display: grid; gap: 10px; }
+.build-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.build-section-head h3 { margin: 5px 0 0; font-size: 17px; color: #14283a; }
+.balance { white-space: nowrap; font-size: 12px; color: #1b4b25; background: #e2f3da; padding: 7px 9px; border-radius: 8px; }
+.shape-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.shape-card {
+  min-height: 112px; padding: 11px; display: grid; grid-template-columns: 34px 1fr; gap: 7px;
+  align-content: start; text-align: left; color: #203548; background: #ffffff;
+  border: 2px solid #d7e0e7; border-radius: 12px; cursor: pointer;
+  font-family: var(--font); box-shadow: none;
+}
+.shape-card:hover { border-color: #5ba6b4; background: #f2fafb; }
+.shape-card:focus-visible { outline: 3px solid #7cff1e; outline-offset: 2px; }
+.shape-card.on { border-color: #12899e; background: #eaf8fa; box-shadow: 0 0 0 1px #12899e inset; }
+.shape-icon { font-size: 25px; }
+.shape-card > span:nth-child(2) { display: grid; gap: 3px; }
+.shape-card b { font-size: 14px; text-transform: capitalize; }
+.shape-card small { color: #5a6d7e; font-size: 10.5px; line-height: 1.25; }
+.shape-card strong { grid-column: 1 / -1; color: #173d48; font-size: 13px; }
+.build-summary { margin-top: 12px; padding: 13px; border: 1px solid #d7e0e7; border-radius: 12px; background: #ffffff; }
+.build-summary .kv { padding: 4px 0; }
+.balance-after { display: flex; justify-content: space-between; margin: 10px 0; padding: 9px 10px; border-radius: 8px; background: #edf6e8; color: #244a1b; font-size: 12.5px; }
+.balance-after.is-error { background: #fff0ed; color: #8c261c; }
+.funds-error { margin: 8px 0; padding: 9px 10px; border-radius: 8px; background: #fff0ed; color: #8c261c; font-size: 12px; line-height: 1.4; }
+.build-cta, .upgrade-cta { min-height: 48px; margin-top: 5px; }
+.build-success { margin: -2px 0 10px; padding: 9px 10px; border-radius: 8px; background: #e3f5db; color: #24521b; font-size: 12px; font-weight: 700; }
+.upgrade-balance { margin-top: 6px; color: #526a7e; font-size: 11.5px; text-align: right; }
+.panel .box { background: #ffffff; border-color: #d7e0e7; }
+.panel .muted, .panel .fine, .panel .field { color: #536a7e; }
+.panel .btn:not(.primary) { color: #284156; background: #ffffff; border-color: #c8d5df; box-shadow: none; }
+.panel .tab { min-height: 44px; color: #3e566a; background: #edf2f5; border-color: #d4dee6; border-radius: 10px; }
+.panel .tab.on { color: #063947; background: #cceff3; border-color: #158da1; }
+.panel input { color: #162c3f; }
+.btn:disabled { opacity: .58; cursor: not-allowed; filter: grayscale(.25); box-shadow: none; }
+
+@media (max-width: 860px) {
+  .panel { width: 100%; max-height: 72vh; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
+  .panel-head { padding: 14px 16px 12px; }
+  .panel > .note, .panel > .box, .panel > .build-flow, .panel > .sec, .panel > .editor, .panel > a { margin-left: 14px; margin-right: 14px; }
+}
+@media (max-width: 820px) {
+  .hud-menu { left: 8px; right: 8px; width: auto; top: 64px; bottom: auto; max-height: calc(100dvh - 148px); overflow-y: auto; }
+  .hb-burger { min-width: 44px; min-height: 44px; }
+  .perf-badge { display: none; }
+  .toast { top: 132px; bottom: auto; pointer-events: none; border-radius: 12px; }
+  .panel .fine { font-size: 12px; color: #4e6578; }
+  .build-success { background: #edf3f7; color: #314b60; }
+  .ai-fab.with-panel { display: none; }
+}
+@media (max-width: 430px) {
+  .shape-grid { grid-template-columns: 1fr 1fr; }
+  .shape-card { min-height: 106px; padding: 9px; }
+  .shape-card small { font-size: 10px; }
+  .build-section-head { align-items: center; }
+  .balance { max-width: 120px; white-space: normal; text-align: right; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

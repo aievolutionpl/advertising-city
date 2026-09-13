@@ -106,7 +106,7 @@ export function AiPanel() {
 
   return (
     <>
-      <button className={`ai-fab ${open ? 'on' : ''}`} onClick={() => setOpen((o) => !o)} title="Menedżer AI — reklama w Twoim budynku">
+      <button className={`ai-fab ${open ? 'on' : ''} ${selected ? 'with-panel' : ''}`} onClick={() => setOpen((o) => !o)} title="Menedżer AI — reklama w Twoim budynku">
         🤖 <span>Menedżer AI</span>
         {mode && <i className="ai-dot" />}
       </button>

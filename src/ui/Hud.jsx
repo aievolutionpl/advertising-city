@@ -8,8 +8,9 @@ import { playerRuntime } from '../scene/playerRuntime.js';
 import { CharacterSelect } from './CharacterSelect.jsx';
 import { useDevice } from './useDevice.js';
 import { EASTER_EGGS, eventFeed } from '../lib/events.js';
-import { SHAPES } from '../lib/economy.js';
+
 import { dayRuntime } from '../scene/dayRuntime.js';
+import { PLOTS } from '../data/city.js';
 
 const MODES = [
   ['iso', '🏙️', 'Panorama'],
@@ -57,10 +58,11 @@ export function Hud() {
   const feed = eventFeed(dayRuntime.hours);
   const walk = mode === 'walk';
   const drive = useCity((s) => s.drive);
-  const buildShape = useCity((s) => s.buildShape);
-  const setBuildShape = useCity((s) => s.setBuildShape);
+
   const dayOverride = useCity((s) => s.dayOverride);
   const setDayOverride = useCity((s) => s.setDayOverride);
+  const buildings = useCity((s) => s.buildings);
+  const select = useCity((s) => s.select);
 
   useEffect(() => { if (!walk) setMenu(false); }, [walk]);
 
@@ -94,6 +96,14 @@ export function Hud() {
           {walk && <span className="hb-xp" title="Poziom i odkrycia">⭐ {lvl.level} <i className="xpbar"><b style={{ width: `${lvl.need ? (lvl.into / lvl.need) * 100 : 100}%` }} /></i> {player.xp} XP · 🗺️ {prog.done}/{prog.total}</span>}
         </div>
         <div className="hb-right">
+          {/* 🎮 gra ↔ kamera miasta: przycisk widoczny ZAWSZE (także na tablecie/telefonie) */}
+          <button
+            className={`btn play ${walk ? 'on' : ''}`}
+            title={walk ? 'Wróć do kamery miasta' : 'Tryb gry: chodź po mieście i wsiądź do auta'}
+            onClick={() => useCity.getState().setMode(walk ? 'iso' : 'walk')}
+          >
+            <span className="bi">{walk ? '🚶' : '🎮'}</span><span>{walk ? 'SPACER' : 'GRAJ'}</span>
+          </button>
           {/* desktop: widoki i czas na wierzchu */}
           <div className="hud-desktop">
             <div className="seg">
@@ -103,15 +113,7 @@ export function Hud() {
                 </button>
               ))}
             </div>
-            <div className="seg">
-              <button
-                className={`btn primary ${walk ? 'on' : ''}`}
-                title={walk ? 'Wróć do kamery miasta (Esc)' : 'Chodź po mieście — WASD / strzałki'}
-                onClick={() => useCity.getState().setMode(walk ? 'iso' : 'walk')}
-              >
-                <span className="bi">{walk ? '🚶' : '🎮'}</span><span>{walk ? 'SPACER' : 'CHODŹ'}</span>
-              </button>
-            </div>
+
             <div className="seg">
               {SPEEDS.map(([sp, ico]) => (
                 <button key={sp} className={`btn tiny ${timeSpeed === sp ? 'on' : ''}`} onClick={() => setTimeSpeed(sp)} title={`Tempo czasu: ${sp}`}>{ico}</button>
@@ -145,11 +147,18 @@ export function Hud() {
       {/* minimalistyczne menu (mobile / po kliknięciu ☰) */}
       {menu && (
         <div className="hud-menu">
+          <div className="hm-label">🎥 Widok kamery</div>
           <div className="hm-row">
             {MODES.filter(([m]) => m !== 'walk').map(([m, ico, label]) => (
-              <button key={m} className={`btn wide ${mode === m ? 'on' : ''}`} onClick={() => { setMode(m); if (m !== 'walk') setMenu(false); }}>{ico} {label}</button>
+              <button key={m} className={`btn wide ${mode === m ? 'on' : ''}`} onClick={() => { setMode(m); setMenu(false); }}>{ico} {label}</button>
             ))}
           </div>
+          <button
+            className={`btn wide game ${walk ? 'on' : ''}`}
+            onClick={() => { useCity.getState().setMode(walk ? 'iso' : 'walk'); setMenu(false); }}
+          >
+            {walk ? '🏙️ Wróć do kamery miasta' : '🎮 Wejdź do gry — chodzenie i auto'}
+          </button>
           <div className="hm-row hm-time">
             {SPEEDS.map(([sp, ico]) => (
               <button key={sp} className={`btn ${timeSpeed === sp ? 'on' : ''}`} onClick={() => setTimeSpeed(sp)}>{ico}</button>
@@ -159,19 +168,15 @@ export function Hud() {
               onClick={() => setDayOverride(dayOverride !== null ? null : (dayRuntime.hours >= 6 && dayRuntime.hours < 19 ? 23 : 12))}
             >{dayRuntime.hours >= 6 && dayRuntime.hours < 19 ? '☀️ Dzień' : '🌙 Noc'}</button>
           </div>
-          <div className="hm-row hm-shapes">
-            <div className="hm-label">🏗️ Kształt nowego budynku ({SHAPES[buildShape]?.label})</div>
-            {Object.values(SHAPES).map((sh) => (
-              <button key={sh.id} className={`btn wide ${buildShape === sh.id ? 'on' : ''}`} title={sh.note} onClick={() => setBuildShape(sh.id)}>
-                {sh.icon} {sh.label} · {sh.extra >= 0 ? '+' : ''}{sh.extra} AC
-              </button>
-            ))}
+          <div className="hm-row hm-build-shortcut">
+            <div><div className="hm-label">🏗️ Budowanie</div><span>Typ, pełny koszt i saldo wybierzesz przy działce.</span></div>
+            <button className="btn wide" onClick={() => {
+              const free = PLOTS.find((p) => !p.park && !buildings[p.id]);
+              if (free) select(free.id);
+              setMenu(false);
+            }}>Wybierz wolną działkę →</button>
           </div>
-          <div className="hm-row">
-            <button className="btn wide ghost" onClick={() => { useCity.getState().setMode('iso'); setMenu(false); }}>
-              🎭 Zmień postać: {characterById(charId).name}
-            </button>
-          </div>
+
           {/* easter eggi: podpowiedź + postęp odkryć */}
           <div className="hm-eggs">
             <div className="hm-label">🥚 Easter eggi {eggs.length}/{EASTER_EGGS.length}</div>
@@ -204,12 +209,13 @@ export function Hud() {
             </div>
           )}
 
-          {/* ── AUTO: licznik jak w GTA/NFS + wsiadanie ── */}
-          {!drive.on && drive.near && (
-            <button className="btn primary car-enter" onClick={() => window.__car?.enter()}>🚗 Wsiądź do auta (E)</button>
-          )}
-          {!drive.on && !drive.near && (
-            <div className="car-hint">🚗 Auta stoją pod budynkami — podejdź i naciśnij <b>E</b></div>
+          {/* ── AUTO: jedno kliknięcie. Przy aucie → wsiadanie; dalej → przywołanie auta ── */}
+          {!drive.on && (
+            <div className="car-bar">
+              {drive.near
+                ? <button className="btn primary car-enter" onClick={() => window.__car?.enter()}>🚗 Wsiądź do auta <b>E</b></button>
+                : <button className="btn primary car-enter" onClick={() => window.__car?.summon()}>🚗 Przywołaj auto</button>}
+            </div>
           )}
           {help && !drive.on && (
             <div className="walk-help">

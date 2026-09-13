@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { PLOTS, ROADS, SEED_BUILDINGS, TREES, plotById, CITY, BLOCK_CENTERS } from '../src/data/city.js';
 import {
   initialState, purchasePlot, upgradeBuilding, setAd, accrue, rentCost, buildCost,
-  upgradeCost, serializePlayerState, deserializePlayerState, sanitizeAd, MAX_FLOORS, START_COINS,
+  purchaseCost, upgradeCost, serializePlayerState, deserializePlayerState, sanitizeAd, MAX_FLOORS, START_COINS, SHAPES,
 } from '../src/lib/economy.js';
 import {
   isBlocked, stepPlayer, safeSpawn, carTransform, pedestrianTransform, isOnRoad, isOnSidewalk,
@@ -39,6 +39,8 @@ test('ekonomia: ceny core > outer, upgrade rośnie z piętrami', () => {
   assert.ok(buildCost(core) > buildCost(outer));
   assert.ok(upgradeCost(4) > upgradeCost(1));
   assert.ok(upgradeCost(MAX_FLOORS) > 0);
+  assert.equal(purchaseCost(outer, 'tower'), rentCost(outer) + buildCost(outer) + SHAPES.tower.extra);
+  assert.ok(purchaseCost(outer, 'shop') < purchaseCost(outer, 'tower'));
 });
 
 test('purchasePlot: kupno obniża saldo i wstawia budynek pod klucz plotId', () => {
@@ -105,13 +107,16 @@ test('sanitizeAd: tnie długość, odrzuca zły URL/kolor, przepuszcza data-URL 
   assert.equal(sanitizeAd({ image: 'data:image/svg+xml;base64,PHN2Zz4=' }).image, 'data:image/svg+xml;base64,PHN2Zz4=');
 });
 
-test('setAd nie mutuje poprzedniego stanu i nie rusza cudzych budynków', () => {
+test('setAd nie mutuje poprzedniego stanu i blokuje edycję cudzych budynków', () => {
   const s0 = base();
   const key = Object.keys(s0.buildings)[0];
-  const r = setAd(s0, key, { title: 'NOWA NAZWA' });
+  assert.equal(setAd(s0, key, { title: 'NOWA NAZWA' }).ok, false, 'house ad jest tylko do podglądu');
+  const plot = PLOTS.find((p) => !p.park && !s0.buildings[p.id]);
+  const mine = purchasePlot(s0, plot).state;
+  const r = setAd(mine, plot.id, { title: 'NOWA NAZWA' });
   assert.equal(r.ok, true);
-  assert.equal(r.state.buildings[key].ad.title, 'NOWA NAZWA');
-  assert.equal(s0.buildings[key].ad.title !== 'NOWA NAZWA', true, 'stary stan nietknięty');
+  assert.equal(r.state.buildings[plot.id].ad.title, 'NOWA NAZWA');
+  assert.notEqual(mine.buildings[plot.id].ad.title, 'NOWA NAZWA', 'stary stan nietknięty');
   assert.equal(setAd(s0, 'nie-ma-takiej', {}).ok, false);
 });
 
