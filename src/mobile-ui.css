@@ -1,0 +1,96 @@
+/* 📱 Architektura mobile: bezpieczne marginesy, pasek wydarzeń, easter eggi, sterowanie kciukiem. */
+
+/* canvas nie może przechwytywać gestów przeglądarki (scroll/zoom) w trybie gry */
+canvas { touch-action: none; }
+html, body { overscroll-behavior: none; height: 100%; }
+
+/* ── pasek górny: respektuj notcha i pasek systemowy ── */
+.hud-bar {
+  padding-top: max(6px, env(safe-area-inset-top));
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── pasek wydarzeń: „co się dzieje teraz" ── */
+.hud-feed {
+  position: absolute;
+  top: calc(max(6px, env(safe-area-inset-top)) + 52px);
+  left: max(10px, env(safe-area-inset-left));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 6;
+}
+.hud-feed span {
+  background: rgba(6, 18, 30, 0.68);
+  color: #eaf8ff;
+  border: 1px solid rgba(0, 231, 255, 0.35);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+}
+
+/* ── easter eggi w menu ── */
+.hm-eggs { display: flex; flex-direction: column; gap: 4px; }
+.hm-eggs .egg {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; line-height: 1.35;
+  padding: 6px 8px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfe6f5;
+}
+.hm-eggs .egg.done { background: rgba(124, 255, 30, 0.14); color: #eaffd8; }
+.hm-eggs .egg b { color: #fff; }
+
+/* ── sterowanie kciukiem w spacerze ── */
+.walk-touch {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(84px, calc(env(safe-area-inset-bottom) + 76px));
+  display: flex; flex-direction: column; gap: 10px; z-index: 7;
+}
+.walk-touch .wt-btn {
+  width: 74px; height: 74px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(6, 18, 30, 0.55);
+  color: #fff; font-weight: 800; font-size: 13px; letter-spacing: 0.03em;
+  backdrop-filter: blur(8px);
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.walk-touch .wt-btn:active { background: rgba(0, 231, 255, 0.35); transform: scale(0.96); }
+
+/* ── telefon: wszystko większe, HUD niżej ── */
+@media (max-width: 620px), (pointer: coarse) {
+  .hud-bar { font-size: 12.5px; }
+  .hb-coins, .hb-clock { font-size: 12.5px; }
+  .hb-xp { font-size: 11.5px; }
+  .hud-menu {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    max-height: 62vh; overflow-y: auto;
+  }
+  .hud-menu .btn { min-height: 46px; font-size: 13.5px; }
+  .walk-chip {
+    bottom: max(14px, calc(env(safe-area-inset-bottom) + 10px));
+    font-size: 12px; max-width: calc(100% - 120px);
+  }
+  .walk-exit { top: calc(max(6px, env(safe-area-inset-top)) + 46px); right: max(10px, env(safe-area-inset-right)); }
+  .hud-feed { top: calc(max(6px, env(safe-area-inset-top)) + 78px); }
+  .ai-fab { bottom: max(76px, calc(env(safe-area-inset-bottom) + 66px)); }
+}
+
+/* ── telefon w poziomie: niski ekran, chowamy co zbędne ── */
+@media (max-height: 520px) and (pointer: coarse) {
+  .hud-feed { display: none; }
+  .walk-chip { display: none; }
+  .clause-bar { padding: 2px 8px; font-size: 10.5px; }
+  .hud-menu { max-height: 78vh; }
+  .walk-touch { flex-direction: row; bottom: max(10px, env(safe-area-inset-bottom)); }
+}
