@@ -5,6 +5,7 @@ import { DEFAULT_CHAR } from '../lib/player.js';
 export const playerRuntime = {
   x: 0, z: 0, y: 0, vy: 0, grounded: true,
   yaw: 0.6, pitch: -0.06,
+  moveX: 0, moveZ: 0,
   speed: 0, running: false, moving: false,
   anim: 0,              // faza kroków (do animacji nóg/rąk)
   charId: DEFAULT_CHAR,
@@ -20,6 +21,7 @@ export function resetPlayerRuntime(charId) {
   if (charId) playerRuntime.charId = charId;
   playerRuntime.y = 0; playerRuntime.vy = 0; playerRuntime.grounded = true;
   playerRuntime.speed = 0; playerRuntime.moving = false; playerRuntime.running = false;
+  playerRuntime.moveX = 0; playerRuntime.moveZ = 0;
   playerRuntime.anim = 0;
   playerRuntime.want.jump = false;
   playerRuntime.want.run = false;

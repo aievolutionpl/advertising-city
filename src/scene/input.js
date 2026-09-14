@@ -29,14 +29,22 @@ export function movementVector() {
     if (a === 'left') x -= 1;
     if (a === 'right') x += 1;
   }
-  return { x: x + input.axes.x, z: z + input.axes.z };
+  return normalizeMovement(x + input.axes.x, z + input.axes.z);
+}
+
+/** Jednolita prędkość na osi i po skosie; chroni też przed sumą klawiatura+D-pad. */
+export function normalizeMovement(x, z) {
+  const length = Math.hypot(x, z);
+  if (length <= 1 || length === 0) return { x, z };
+  return { x: x / length, z: z / length };
 }
 
 export function consumeLook() {
   const { dx, dy } = input.look;
   input.look.dx = 0;
   input.look.dy = 0;
-  return { dx, dy };
+  // Utrata klatki / ponowne złapanie dotyku nie może obrócić kamery o pół miasta.
+  return { dx: Math.max(-120, Math.min(120, dx)), dy: Math.max(-90, Math.min(90, dy)) };
 }
 
 export function resetInput() {
@@ -44,4 +52,6 @@ export function resetInput() {
   input.axes.x = 0;
   input.axes.z = 0;
   input.run = false;
+  input.look.dx = 0;
+  input.look.dy = 0;
 }

@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCity } from '../store.js';
 import { CITY } from '../data/city.js';
-import { POIS, PHYS, applyDiscoveries, characterById, checkDiscoveries, levelOf, nearestPoi, stepVertical, turnTo } from '../lib/player.js';
+import { POIS, PHYS, approach, applyDiscoveries, characterById, checkDiscoveries, levelOf, nearestPoi, stepVertical, turnTo } from '../lib/player.js';
 import { safeSpawn, stepPlayer, WALK } from '../lib/cityLogic.js';
 import { input, consumeLook, movementVector, resetInput } from './input.js';
 import { playerRuntime, resetPlayerRuntime } from './playerRuntime.js';
@@ -84,8 +84,9 @@ export function Player() {
 
     /* 1. rozglądanie (mysz / przeciągnięcie palcem) */
     const look = consumeLook();
-    playerRuntime.yaw -= look.dx * 0.0024;
-    playerRuntime.pitch = Math.max(-0.55, Math.min(0.75, playerRuntime.pitch - look.dy * 0.0018));
+    playerRuntime.yaw -= look.dx * 0.00225;
+    // Dolny limit utrzymuje kamerę ponad barkiem zamiast w modelu postaci.
+    playerRuntime.pitch = Math.max(-0.32, Math.min(0.65, playerRuntime.pitch - look.dy * 0.00165));
 
     /* 2. ruch poziomy — kolizje z budynkami (śliskość po ścianie) */
     const mv = movementVector();
@@ -94,8 +95,19 @@ export function Player() {
     const sinY = Math.sin(playerRuntime.yaw);
     const cosY = Math.cos(playerRuntime.yaw);
     // forward = (sin yaw, cos yaw); mv.z = -1 dla W (konwencja three), przechodzi na +forward
-    const dirX = mv.x * cosY - mv.z * sinY;
-    const dirZ = -mv.x * sinY - mv.z * cosY;
+    const wantedX = mv.x * cosY - mv.z * sinY;
+    const wantedZ = -mv.x * sinY - mv.z * cosY;
+    // Krótkie rozpędzenie wygładza zmianę kierunku, ale puszczenie sterowania
+    // hamuje szybciej — na ekranowym D-padzie postać nie „odpływa”.
+    const braking = mv.x === 0 && mv.z === 0;
+    const response = braking ? PHYS.accel * 2.6 : PHYS.accel * 1.35;
+    playerRuntime.moveX = approach(playerRuntime.moveX, wantedX, dt, response);
+    playerRuntime.moveZ = approach(playerRuntime.moveZ, wantedZ, dt, response);
+    if (braking && Math.hypot(playerRuntime.moveX, playerRuntime.moveZ) < 0.025) {
+      playerRuntime.moveX = 0; playerRuntime.moveZ = 0;
+    }
+    const dirX = playerRuntime.moveX;
+    const dirZ = playerRuntime.moveZ;
     const res = stepPlayer({ x: playerRuntime.x, z: playerRuntime.z }, dirX, dirZ, dt, listRef.current, speed);
     const travelled = Math.hypot(res.x - playerRuntime.x, res.z - playerRuntime.z);
     playerRuntime.x = res.x; playerRuntime.z = res.z;

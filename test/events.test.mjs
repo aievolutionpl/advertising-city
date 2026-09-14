@@ -5,8 +5,9 @@ import {
   EASTER_EGGS, abductTrack, activeEvents, balloonTrack, coinPicks, droneShowTrack,
   eventFeed, isActive, paradeTrack, spiderTrack, staticEggs, ufoTrack,
 } from '../src/lib/events.js';
+import { CITY } from '../src/data/city.js';
 
-const EXTENT = 84;
+const EXTENT = CITY.extent;
 
 test('isActive: zakres nocny zawija się przez północ (21:00 → 4:24)', () => {
   const night = { from: 21, to: 4.4 };

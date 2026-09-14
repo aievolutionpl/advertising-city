@@ -7,6 +7,7 @@ import {
   applyDiscoveries, buildPois, characterById, checkDiscoveries, exploreProgress,
   levelOf, loadPlayer, nearestPoi, savePlayer, stepVertical, turnTo, approach,
 } from '../src/lib/player.js';
+import { CITY } from '../src/data/city.js';
 
 test('postacie: 6 bohaterów, unikalne id, komplet palety', () => {
   assert.equal(CHARACTERS.length, 6);
@@ -74,7 +75,7 @@ test('POI: sensowne nazwy, promienie, unikalne id/nazwy i poprawne kategorie', (
     assert.ok(p.name.length > 3, `${p.id}: nazwa`);
     assert.ok(p.r >= 5 && p.r <= 14, `${p.id}: promień odkrycia`);
     assert.ok(p.xp >= 50 && p.xp <= 200, `${p.id}: nagroda XP`);
-    assert.ok(Math.abs(p.x) <= 84 && Math.abs(p.z) <= 84, `${p.id}: w granicach miasta`);
+    assert.ok(Math.abs(p.x) <= CITY.extent && Math.abs(p.z) <= CITY.extent, `${p.id}: w granicach miasta`);
   }
   const plaza = POIS.find((p) => p.id === 'plaza');
   assert.deepEqual({ x: plaza.x, z: plaza.z }, { x: 0, z: 0 }, 'skwer w centrum miasta');

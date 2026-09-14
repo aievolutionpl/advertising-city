@@ -74,6 +74,9 @@ export function Ground() {
   const grassTex = useMemo(makeGrassTexture, []);
   const pavingTex = useMemo(makePavingTexture, []);
   const zebra = useRef();
+  const parkBeds = useRef();
+  const parkPathsX = useRef();
+  const parkPathsZ = useRef();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const E = CITY.extent;
 
@@ -95,6 +98,27 @@ export function Ground() {
     }
     zebra.current.count = k;
     zebra.current.instanceMatrix.needsUpdate = true;
+  }, [dummy]);
+
+  useLayoutEffect(() => {
+    const parks = PLOTS.filter((p) => p.park);
+    parks.forEach((p, i) => {
+      dummy.position.set(p.x, 0.35, p.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      parkBeds.current?.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(p.x, 0.452, p.z);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.updateMatrix();
+      parkPathsX.current?.setMatrixAt(i, dummy.matrix);
+      dummy.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+      dummy.updateMatrix();
+      parkPathsZ.current?.setMatrixAt(i, dummy.matrix);
+    });
+    [parkBeds, parkPathsX, parkPathsZ].forEach((r) => {
+      if (r.current) r.current.instanceMatrix.needsUpdate = true;
+    });
   }, [dummy]);
 
   return (
@@ -129,6 +153,20 @@ export function Ground() {
       <instancedMesh ref={zebra} args={[undefined, undefined, BLOCK_CENTERS.length * BLOCK_CENTERS.length * 4]}>
         <planeGeometry args={[7.4, 0.9]} />
         <meshStandardMaterial color="#efe9d6" roughness={1} />
+      </instancedMesh>
+
+      {/* Parki kieszonkowe: trawnik i dwie alejki w 3 draw callach dla całej mapy. */}
+      <instancedMesh ref={parkBeds} args={[undefined, undefined, PLOTS.filter((p) => p.park).length]} receiveShadow>
+        <boxGeometry args={[CITY.plotSize, 0.18, CITY.plotSize]} />
+        <meshStandardMaterial color="#56883f" roughness={1} />
+      </instancedMesh>
+      <instancedMesh ref={parkPathsX} args={[undefined, undefined, PLOTS.filter((p) => p.park).length]} receiveShadow>
+        <planeGeometry args={[CITY.plotSize - 0.5, 0.72]} />
+        <meshStandardMaterial color="#d2c6a8" roughness={1} />
+      </instancedMesh>
+      <instancedMesh ref={parkPathsZ} args={[undefined, undefined, PLOTS.filter((p) => p.park).length]} receiveShadow>
+        <planeGeometry args={[CITY.plotSize - 0.5, 0.72]} />
+        <meshStandardMaterial color="#d2c6a8" roughness={1} />
       </instancedMesh>
     </group>
   );
@@ -220,29 +258,15 @@ function plotPadTexture(price) {
   return t;
 }
 
-function FreePlot({ plot, selected, onSelect, shape }) {
+function SelectedPlot({ plot, shape }) {
   const price = purchaseCost(plot, shape);
   const label = useMemo(() => plotPadTexture(price), [price]);
-  const color = selected ? '#7CFF1E' : '#00E7FF';
-  const half = plot.w / 2;
   return (
-    <group position={[plot.x, 0.34, plot.z]} onClick={(e) => { e.stopPropagation(); onSelect(plot.id); }}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[plot.w, plot.d]} />
-        <meshStandardMaterial color={color} transparent opacity={selected ? 0.5 : 0.24} />
+    <group position={[plot.x, 0.4, plot.z]}>
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, 0.025, 0]}>
+        <ringGeometry args={[plot.w * 0.46, plot.w * 0.53, 4]} />
+        <meshBasicMaterial color="#7CFF1E" toneMapped={false} />
       </mesh>
-      {[[0, -half], [0, half]].map(([dx, dz], i) => (
-        <mesh key={`x${i}`} position={[dx, 0.02, dz]}>
-          <boxGeometry args={[plot.w, 0.06, 0.16]} />
-          <meshBasicMaterial color={color} toneMapped={false} />
-        </mesh>
-      ))}
-      {[[-half, 0], [half, 0]].map(([dx, dz], i) => (
-        <mesh key={`z${i}`} position={[dx, 0.02, dz]}>
-          <boxGeometry args={[0.16, 0.06, plot.d]} />
-          <meshBasicMaterial color={color} toneMapped={false} />
-        </mesh>
-      ))}
       <sprite position={[0, 3.4, 0]} scale={[5.4, 1.7, 1]}>
         <spriteMaterial map={label} transparent depthWrite={false} toneMapped={false} />
       </sprite>
@@ -256,11 +280,70 @@ export function FreePlots() {
   const select = useCity((s) => s.select);
   const shape = useCity((s) => s.buildShape);
   const free = useMemo(() => PLOTS.filter((p) => !p.park && !buildings[p.id]), [buildings]);
+  const pads = useRef();
+  const edgesX = useRef();
+  const edgesZ = useRef();
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useLayoutEffect(() => {
+    free.forEach((p, i) => {
+      dummy.position.set(p.x, 0.355, p.z);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.set(p.w, p.d, 1);
+      dummy.updateMatrix();
+      pads.current?.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(p.x, 0.39, p.z - p.d / 2);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(p.w, 1, 1);
+      dummy.updateMatrix();
+      edgesX.current?.setMatrixAt(i * 2, dummy.matrix);
+      dummy.position.z = p.z + p.d / 2;
+      dummy.updateMatrix();
+      edgesX.current?.setMatrixAt(i * 2 + 1, dummy.matrix);
+      dummy.position.set(p.x - p.w / 2, 0.39, p.z);
+      dummy.rotation.set(0, Math.PI / 2, 0);
+      dummy.scale.set(p.d, 1, 1);
+      dummy.updateMatrix();
+      edgesZ.current?.setMatrixAt(i * 2, dummy.matrix);
+      dummy.position.x = p.x + p.w / 2;
+      dummy.updateMatrix();
+      edgesZ.current?.setMatrixAt(i * 2 + 1, dummy.matrix);
+    });
+    [pads, edgesX, edgesZ].forEach((r) => {
+      if (r.current) { r.current.instanceMatrix.needsUpdate = true; }
+    });
+    if (pads.current) pads.current.count = free.length;
+    if (edgesX.current) edgesX.current.count = free.length * 2;
+    if (edgesZ.current) edgesZ.current.count = free.length * 2;
+  }, [free, dummy]);
+
+  const hit = (e) => {
+    e.stopPropagation();
+    const p = free[e.instanceId];
+    if (p) select(p.id);
+  };
+  const hitEdge = (e) => {
+    e.stopPropagation();
+    const p = free[Math.floor(e.instanceId / 2)];
+    if (p) select(p.id);
+  };
+  const selectedPlot = free.find((p) => p.id === selected);
   return (
     <group>
-      {free.map((p) => (
-        <FreePlot key={p.id} plot={p} selected={selected === p.id} onSelect={select} shape={shape} />
-      ))}
+      {/* 164+ wolne parcele nadal kosztują tylko 3 draw calle; etykieta pokazuje się po wyborze. */}
+      <instancedMesh ref={pads} args={[undefined, undefined, free.length]} onClick={hit}>
+        <planeGeometry args={[1, 1]} />
+        <meshStandardMaterial color="#00b9d5" transparent opacity={0.18} roughness={0.72} />
+      </instancedMesh>
+      <instancedMesh ref={edgesX} args={[undefined, undefined, free.length * 2]} onClick={hitEdge}>
+        <boxGeometry args={[1, 0.07, 0.075]} />
+        <meshBasicMaterial color="#00E7FF" transparent opacity={0.86} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={edgesZ} args={[undefined, undefined, free.length * 2]} onClick={hitEdge}>
+        <boxGeometry args={[1, 0.07, 0.075]} />
+        <meshBasicMaterial color="#00E7FF" transparent opacity={0.86} toneMapped={false} />
+      </instancedMesh>
+      {selectedPlot && <SelectedPlot plot={selectedPlot} shape={shape} />}
     </group>
   );
 }

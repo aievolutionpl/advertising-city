@@ -275,11 +275,19 @@ export function CameraRig() {
       const pr = playerRuntime;
       const sinY = Math.sin(pr.yaw);
       const cosY = Math.cos(pr.yaw);
-      const dist = (pr.running ? 5.3 : 4.6) * (window.innerWidth < 820 ? 0.86 : 1);
+      const dist = (pr.running ? 5.35 : 4.75) * (window.innerWidth < 820 ? 0.92 : 1);
       const cp = Math.cos(pr.pitch);
-      const height = 2.05 + Math.sin(pr.pitch) * 3.1;
-      camera.position.set(pr.x - sinY * dist * cp, pr.y + height, pr.z - cosY * dist * cp);
-      camera.lookAt(pr.x + sinY * 3.2, pr.y + 1.55 + Math.sin(pr.pitch) * 2.6, pr.z + cosY * 3.2);
+      const horizontal = Math.max(3.5, dist * cp);
+      const height = Math.max(1.48, 2.18 + Math.sin(pr.pitch) * 2.25);
+      const targetX = pr.x - sinY * horizontal;
+      const targetY = pr.y + height;
+      const targetZ = pr.z - cosY * horizontal;
+      // Tłumienie niezależne od FPS usuwa drżenie przy nierównej liczbie klatek.
+      const follow = 1 - Math.exp(-dt * 15);
+      camera.position.x += (targetX - camera.position.x) * follow;
+      camera.position.y += (targetY - camera.position.y) * follow;
+      camera.position.z += (targetZ - camera.position.z) * follow;
+      camera.lookAt(pr.x + sinY * 3.2, pr.y + 1.58 + Math.sin(pr.pitch) * 2.25, pr.z + cosY * 3.2);
       debugState.player.x = pr.x;
       debugState.player.z = pr.z;
       debugState.player.yaw = pr.yaw;

@@ -38,12 +38,27 @@ test('29. front budynku patrzy na jezdnię, nie w środek kwartału', () => {
   }
 });
 
-test('30. rozbudowana siatka: 5×5 kwartałów, 6 linii jezdni, wszystkie w granicach mapy', () => {
-  assert.equal(BLOCK_CENTERS.length, 5);
-  assert.equal(ROAD_LINES.length, 6);
+test('30. rozbudowana siatka: 7×7 kwartałów, 8 linii jezdni, wszystkie w granicach mapy', () => {
+  assert.equal(CITY.grid, 7);
+  assert.equal(BLOCK_CENTERS.length, 7);
+  assert.equal(ROAD_LINES.length, 8);
+  assert.equal(PLOTS.length, 196, '7×7 kwartałów × 4 działki');
   const outer = Math.max(...ROAD_LINES.map(Math.abs)) + CITY.road / 2;
   assert.ok(outer < CITY.extent, `obwodnica (${outer}) wystaje poza mapę (${CITY.extent})`);
-  assert.ok(CITY.extent >= 78, 'miasto ma być większe niż w v0.1 (±52)');
+  assert.ok(CITY.extent >= 112, 'miasto ma obejmować pełne nowe obrzeża');
+});
+
+test('30b. rozbudowa zachowuje stare ID i współrzędne zapisanych działek', () => {
+  const anchors = {
+    p00wn: [-60.25, -60.25], p22en: [4.25, -4.25], p44es: [60.25, 60.25],
+  };
+  for (const [id, [x, z]] of Object.entries(anchors)) {
+    const p = PLOTS.find((q) => q.id === id);
+    assert.ok(p, `brak starej działki ${id}`);
+    assert.deepEqual([p.x, p.z], [x, z], `${id} zmieniła pozycję — złamany zapis localStorage`);
+  }
+  assert.ok(PLOTS.some((p) => p.id.startsWith('p5')) && PLOTS.some((p) => p.id.startsWith('p6')),
+    'nowe obrzeża muszą dostać nowe ID, bez renumeracji starych');
 });
 
 test('31. działki trzymają się swojego kwartału i nie nachodzą na jezdnię', () => {
@@ -60,7 +75,8 @@ test('32. parki nie są na sprzedaż, a wolnych działek jest więcej niż 60', 
   const parks = PLOTS.filter((p) => p.park);
   const free = PLOTS.filter((p) => !p.park);
   assert.ok(parks.length >= 8, 'miasto ma mieć parki');
-  assert.ok(free.length > 60, `wolnych działek: ${free.length}`);
+  assert.ok(parks.length >= 30, `za mało zieleni dla 7×7: ${parks.length}`);
+  assert.ok(free.length >= 160, `wolnych działek: ${free.length}`);
   for (const p of free) assert.ok(!p.park, `${p.id} park nie może być do kupienia`);
 });
 

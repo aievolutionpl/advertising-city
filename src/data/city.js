@@ -1,7 +1,7 @@
 // Advertising City — layout miasta. CZYSTE DANE (bez three/react) → testowalne headless.
 //
 // Siatka (metry): pitch 28 = blok 16 + 2×chodnik 2 + jezdnia 8.
-//   bloki  → środki w ±28, ±56 i 0 (5×5 kwartałów), rozpiętość ±8
+//   bloki  → 7×7 kwartałów; stare pięć osi zachowuje kolejność/ID i współrzędne
 //   chodnik→ pas 8..10 od środka bloku (tu chodzą piesi)
 //   jezdnia→ pas 10..18, tj. wyśrodkowana na ±14, ±42 i ±70 (tam jeżdżą auta)
 // Dzięki temu żaden budynek nie stoi na asfalcie, a pieszy nie chodzi po jezdni.
@@ -14,15 +14,18 @@ export const CITY = {
   block: 16,
   road: 8,
   sidewalk: 2,
-  grid: 5,          // 5×5 kwartałów (25 bloków, 100 działek)
-  ring: 70,         // obwodnica = najbardziej zewnętrzna linia jezdni (±70)
-  extent: 84,       // pół-miasta: -84..84
+  grid: 7,          // 7×7 kwartałów (49 bloków, 196 działek)
+  ring: 98,         // obwodnica = najbardziej zewnętrzna linia jezdni (±98)
+  extent: 112,      // pół-miasta: -112..112
   plotSize: 7,
 };
 
-/** Środki bloków (5×5) i linie jezdni między nimi. */
-export const BLOCK_CENTERS = [-56, -28, 0, 28, 56];
-export const ROAD_LINES = [-70, -42, -14, 14, 42, 70];
+/**
+ * Stare osie MUSZĄ zostać na indeksach 0..4: ID p00..p44 są kluczami localStorage.
+ * Nowe zachodnie/wschodnie kwartały dopisujemy na końcu zamiast renumerować mapę.
+ */
+export const BLOCK_CENTERS = [-56, -28, 0, 28, 56, -84, 84];
+export const ROAD_LINES = [-98, -70, -42, -14, 14, 42, 70, 98];
 
 export function buildPlots() {
   const plots = [];
@@ -49,6 +52,9 @@ export function buildPlots() {
     'p00wn', 'p00ws', 'p22en', 'p22es', 'p01en', 'p10en', 'p21ws', 'p12wn',
     'p04wn', 'p04es', 'p40wn', 'p40es', 'p33wn', 'p11ws', 'p13en', 'p31en',
     'p44wn', 'p44es', 'p24ws', 'p42en',
+    // nowe obrzeża: małe parki kieszonkowe rozbijają 196 działek na czytelne dzielnice
+    'p50wn', 'p50es', 'p52ws', 'p54en', 'p56wn', 'p56es',
+    'p61en', 'p63ws', 'p65en', 'p66wn', 'p66es', 'p55ws',
   ];
   for (const p of plots) if (parkIds.includes(p.id)) p.park = true;
   return plots;
@@ -127,11 +133,11 @@ export function buildTrees() {
       });
     }
   }
-  // alejki po obwodzie: zieleń między jezdniami obwodnicy (66..74) a skrajem mapy
-  const LANE = 79;                  // pas zieleni na skraju
-  const LANE2 = 83;                 // druga, gęstsza linia drzew przy samej krawędzi
-  // omija jezdnie na ±14, ±42, ±70 (pasy 10..18 / 38..46 / 66..74)
-  const ALONG = [-63, -53, -35, -25, -7, 7, 25, 35, 53, 63];
+  // zielony bufor między obwodnicą a skrajem mapy; wyprowadzony z CITY zamiast starego ±84
+  const LANE = CITY.ring + CITY.road / 2 + 5;
+  const LANE2 = CITY.extent - 1.5;
+  // punkty pomiędzy pasami jezdni — nigdy na asfalcie
+  const ALONG = [-91, -81, -63, -53, -35, -25, -7, 7, 25, 35, 53, 63, 81, 91];
   for (const u of ALONG) {
     for (const s of [-1, 1]) {
       trees.push({ x: u, z: s * LANE, s: 1.05, tone: 0.4 });
@@ -142,8 +148,8 @@ export function buildTrees() {
     }
   }
   // zieleń wzdłuż wewnętrznych kwartałów (skwer na każdym skrzyżowaniu pasa zieleni)
-  for (const a of [-63, -35, -7, 7, 35, 63]) {
-    for (const b of [-63, -35, -7, 7, 35, 63]) {
+  for (const a of [-91, -63, -35, -7, 7, 35, 63, 91]) {
+    for (const b of [-91, -63, -35, -7, 7, 35, 63, 91]) {
       if (rnd() < 0.55) trees.push({ x: a, z: b, s: 0.8 + rnd() * 0.5, tone: rnd() });
     }
   }

@@ -52,7 +52,7 @@ const hashOf = (s = '') => {
 };
 
 /** Dach: klimatyzatory, komin wentylacyjny, antena na wyższych budynkach. */
-function Roof({ w, d, tower, tone }) {
+function Roof({ w, d, tower, tone, variant = 0 }) {
   return (
     <group>
       <mesh position={[w * 0.22, 0.45, -d * 0.18]} castShadow>
@@ -78,6 +78,29 @@ function Roof({ w, d, tower, tone }) {
             <meshBasicMaterial color="#ff5f5f" toneMapped={false} />
           </mesh>
         </>
+      )}
+      {variant % 2 === 0 ? (
+        <group position={[-w * 0.18, 0.72, -d * 0.2]} rotation={[0.18, 0, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[Math.max(1.4, w * 0.34), 0.1, Math.max(0.9, d * 0.24)]} />
+            <meshStandardMaterial color="#173c55" roughness={0.28} metalness={0.42} />
+          </mesh>
+          <mesh position={[0, -0.32, 0]} castShadow>
+            <boxGeometry args={[0.12, 0.62, 0.12]} />
+            <meshStandardMaterial color="#747c82" metalness={0.65} roughness={0.42} />
+          </mesh>
+        </group>
+      ) : (
+        <group position={[-w * 0.2, 1.0, -d * 0.18]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.58, 0.68, 1.25, 12]} />
+            <meshStandardMaterial color="#66737b" roughness={0.62} metalness={0.4} />
+          </mesh>
+          <mesh position={[0, -0.85, 0]} castShadow>
+            <cylinderGeometry args={[0.09, 0.09, 0.7, 6]} />
+            <meshStandardMaterial color="#596168" metalness={0.55} />
+          </mesh>
+        </group>
       )}
     </group>
   );
@@ -186,7 +209,7 @@ export function Building({ b, selected, onSelect }) {
 
       {/* dach */}
       <group position={[0, bodyTop + 0.9, 0]}>
-        <Roof w={tower ? w * 0.7 : w} d={tower ? d * 0.7 : d} tower={tower} tone="#9a9488" />
+        <Roof w={tower ? w * 0.7 : w} d={tower ? d * 0.7 : d} tower={tower} tone="#9a9488" variant={variant} />
       </group>
 
       {/* billboard na fasadzie — świeci jak LED, więc tekst jest czytelny o każdej porze */}
