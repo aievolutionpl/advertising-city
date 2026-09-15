@@ -54,6 +54,9 @@ export function dayState(hours) {
     win: lerp(a.win, b.win, t),
     sun: lerpHex(a.sun, b.sun, t),
     fog: lerpHex(a.fog, b.fog, t),
+    // Nocą dystans łagodnie się skraca, za dnia panorama pozostaje jasna i czytelna.
+    fogNear: lerp(86, 132, 1 - lerp(a.night, b.night, t)),
+    fogFar: lerp(255, 350, 1 - lerp(a.night, b.night, t)),
     skyTop: lerpHex(a.sky[0], b.sky[0], t),
     skyMid: lerpHex(a.sky[1], b.sky[1], t),
     skyBottom: lerpHex(a.sky[2], b.sky[2], t),

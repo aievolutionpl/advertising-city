@@ -140,6 +140,7 @@ export function Building({ b, selected, onSelect }) {
 
   return (
     <group
+      name={`budynek-${variant}-${b.plotId || b.id}`}
       position={[b.x, 0.34, b.z]}
       rotation={[0, yaw, 0]}
       onClick={(e) => { e.stopPropagation(); onSelect(b.plotId); }}
@@ -163,9 +164,18 @@ export function Building({ b, selected, onSelect }) {
         <boxGeometry args={[w * 0.8, 1.9, 0.14]} />
         <primitive object={shopWindowMaterial} attach="material" />
       </mesh>
-      <mesh position={[-w * 0.33, 1.5, d / 2 + 0.09]} castShadow>
-        <boxGeometry args={[0.95, 2.0, 0.16]} />
-        <meshStandardMaterial color="#3b4048" roughness={0.6} metalness={0.2} />
+      {/* wejście w ramie i daszek: głębokość daje czytelny front także z kamery ulicznej */}
+      <mesh name="portal-wejsciowy" position={[-w * 0.33, 1.55, d / 2 + 0.18]} castShadow>
+        <boxGeometry args={[1.32, 2.45, 0.2]} />
+        <meshStandardMaterial color="#c6bda9" roughness={0.82} />
+      </mesh>
+      <mesh position={[-w * 0.33, 1.5, d / 2 + 0.31]} castShadow>
+        <boxGeometry args={[0.88, 1.98, 0.08]} />
+        <meshStandardMaterial color="#303943" roughness={0.34} metalness={0.28} />
+      </mesh>
+      <mesh position={[-w * 0.33, 2.9, d / 2 + 0.72]} rotation={[0.16, 0, 0]} castShadow>
+        <boxGeometry args={[1.75, 0.12, 1.15]} />
+        <meshStandardMaterial color={accent} roughness={0.48} metalness={0.12} />
       </mesh>
       <mesh position={[0, 2.82, d / 2 + 0.62]} rotation={[0.22, 0, 0]} castShadow>
         <boxGeometry args={[w * 0.94, 0.14, 1.25]} />
@@ -196,6 +206,30 @@ export function Building({ b, selected, onSelect }) {
           <meshStandardMaterial color="#b9b2a4" roughness={0.85} />
         </mesh>
       ))}
+
+      {/* Dwa lekkie warianty bryły: balkony albo pionowy wykusz. Stała liczba meshy na budynek. */}
+      {baseFloors >= 2 && variant % 2 === 0 && (
+        <group name="balkony-fasadowe">
+          {[0.34, 0.7].map((level, i) => (
+            <group key={level} position={[w * 0.23 * (i ? -1 : 1), yTopOfGround + baseH * level, d / 2 + 0.48]}>
+              <mesh castShadow>
+                <boxGeometry args={[w * 0.3, 0.16, 0.95]} />
+                <meshStandardMaterial color="#c9c3b7" roughness={0.86} />
+              </mesh>
+              <mesh position={[0, 0.48, 0.4]} castShadow>
+                <boxGeometry args={[w * 0.3, 0.72, 0.07]} />
+                <meshStandardMaterial color="#6f7c82" roughness={0.34} metalness={0.38} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      )}
+      {baseFloors >= 2 && variant % 2 === 1 && (
+        <mesh name="pionowy-wykusz" position={[w * 0.27, yTopOfGround + baseH / 2, d / 2 + 0.32]} castShadow>
+          <boxGeometry args={[w * 0.24, baseH * 0.86, 0.62]} />
+          <primitive object={shopWindowMaterial} attach="material" />
+        </mesh>
+      )}
 
       {/* gzyms + attyka */}
       <mesh position={[0, bodyTop + 0.2, 0]} castShadow receiveShadow>

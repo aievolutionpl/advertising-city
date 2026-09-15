@@ -122,8 +122,8 @@ export function Ground() {
   }, [dummy]);
 
   return (
-    <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+    <group name="teren-drogi-chodniki-parki">
+      <mesh name="teren-trawiasty" rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[E * 2 + 30, E * 2 + 30]} />
         <meshStandardMaterial map={grassTex} roughness={1} />
       </mesh>

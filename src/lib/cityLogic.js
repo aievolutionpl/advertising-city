@@ -51,6 +51,29 @@ export function safeSpawn(buildings) {
 
 /* ---------- NPC: samochody ---------- */
 
+/**
+ * Ruch miejski po zamkniętej pętli wokół wybranego kwartału. Każdy bok leży na jednej
+ * z jezdni otaczających blok; lane=0/1 rozdziela kierunki na dwa pasy.
+ */
+export function trafficTransform(t, blockIndex = 0, lane = 0) {
+  const total = BLOCK_CENTERS.length ** 2;
+  const idx = ((blockIndex % total) + total) % total;
+  const bx = BLOCK_CENTERS[idx % BLOCK_CENTERS.length];
+  const bz = BLOCK_CENTERS[Math.floor(idx / BLOCK_CENTERS.length)];
+  const r = CITY.pitch / 2 + (lane === 0 ? -2.1 : 2.1);
+  const side = 8 * r;
+  const u = ((t % 1) + 1) % 1;
+  const routeU = lane === 0 ? u : (1 - u) % 1;
+  const s = routeU * side;
+  let out;
+  if (s < 2 * r) out = { x: bx - r + s, z: bz - r, dirX: 1, dirZ: 0 };
+  else if (s < 4 * r) out = { x: bx + r, z: bz - r + (s - 2 * r), dirX: 0, dirZ: 1 };
+  else if (s < 6 * r) out = { x: bx + r - (s - 4 * r), z: bz + r, dirX: -1, dirZ: 0 };
+  else out = { x: bx - r, z: bz + r - (s - 6 * r), dirX: 0, dirZ: -1 };
+  if (lane === 1) out = { ...out, dirX: -out.dirX, dirZ: -out.dirZ };
+  return { ...out, lane, blockIndex: idx };
+}
+
 /** Trasa samochodu po obwodnicy — pętla zamknięta, oba pasy w obrębie jezdni (±42 ±2).
  *  Zwraca pozycję + wektor kierunku (rotację liczy komponent renderujący). */
 export function carTransform(t, lane = 0) {
@@ -86,8 +109,11 @@ export function carTransform(t, lane = 0) {
  * ten sam wynik na kliencie i w teście; faza w [0,1) rozsuwa pieszych.
  */
 export function pedestrianTransform(t, blockIndex = 0, phase = 0) {
-  const i = ((blockIndex % 3) + 3) % 3;
-  const j = ((Math.floor(blockIndex / 3) % 3) + 3) % 3;
+  const n = BLOCK_CENTERS.length;
+  const total = n ** 2;
+  const idx = ((blockIndex % total) + total) % total;
+  const i = idx % n;
+  const j = Math.floor(idx / n);
   const bx = BLOCK_CENTERS[i];
   const bz = BLOCK_CENTERS[j];
   const r = CITY.block / 2 + 1; // 9 → środek pasa chodnika

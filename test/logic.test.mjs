@@ -8,7 +8,7 @@ import {
   purchaseCost, upgradeCost, serializePlayerState, deserializePlayerState, sanitizeAd, MAX_FLOORS, START_COINS, SHAPES,
 } from '../src/lib/economy.js';
 import {
-  isBlocked, stepPlayer, safeSpawn, carTransform, pedestrianTransform, isOnRoad, isOnSidewalk,
+  isBlocked, stepPlayer, safeSpawn, carTransform, trafficTransform, pedestrianTransform, isOnRoad, isOnSidewalk,
   orbitPosition, clampOrbit, buildingBox,
 } from '../src/lib/cityLogic.js';
 import { wrapText, pickReadable, shade } from '../src/lib/adTexture.js';
@@ -192,6 +192,22 @@ test('samochody: pętla zamknięta (t=0 == t=1), trzymają się asfaltu, dwa pas
   assert.notDeepEqual([e.x, e.z], [w.x, w.z], 'dwa pasy → różne pozycje');
 });
 
+test('ruch miejski: auta objeżdżają różne kwartały, dwa pasy pozostają na jezdni', () => {
+  for (const block of [0, 6, 17, 31, 48]) {
+    for (const lane of [0, 1]) {
+      const start = trafficTransform(0, block, lane);
+      const end = trafficTransform(1, block, lane);
+      assert.ok(Math.abs(start.x - end.x) < 1e-9 && Math.abs(start.z - end.z) < 1e-9, 'pętla domknięta');
+      for (const t of [0.07, 0.31, 0.58, 0.83]) {
+        const p = trafficTransform(t, block, lane);
+        assert.equal(isOnRoad(p.x, p.z), true, `blok ${block}, pas ${lane}: auto na jezdni`);
+        assert.ok(Math.hypot(p.dirX, p.dirZ) > 0.99, 'kierunek znormalizowany');
+      }
+    }
+  }
+  assert.notDeepEqual(trafficTransform(0.2, 0, 0), trafficTransform(0.2, 48, 0), 'ruch rozłożony po mieście');
+});
+
 test('piesci: deterministyczni, domknięci, chodzą po chodniku (nie po jezdni)', () => {
   const a = pedestrianTransform(0.25, 4, 0.1);
   const b = pedestrianTransform(0.25, 4, 0.1);
@@ -202,6 +218,9 @@ test('piesci: deterministyczni, domknięci, chodzą po chodniku (nie po jezdni)'
   assert.equal(isOnSidewalk(first.x, first.z), true, 'idzie po chodniku');
   assert.equal(isOnRoad(first.x, first.z), false, 'nie wchodzi na jezdnię');
   assert.equal(isBlocked(first.x, first.z, SEED_BUILDINGS.map((s) => ({ ...plotById(s.plotId), w: 7, d: 7 })), 0), false);
+  const outer = pedestrianTransform(0.2, 48, 0.2);
+  assert.equal(isOnSidewalk(outer.x, outer.z), true, 'piesi docierają też do zewnętrznych 7×7 kwartałów');
+  assert.ok(Math.abs(outer.x) > 70 || Math.abs(outer.z) > 70, 'trasa 48 leży na obrzeżu');
 });
 
 test('kamera miejska: orbitalna pozycja nad miastem, clamp trzyma granice', () => {

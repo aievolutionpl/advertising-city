@@ -123,13 +123,26 @@ export function buildTrees() {
   let seed = 20260913;
   const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
   for (const p of PLOTS.filter((q) => q.park)) {
-    const n = 6 + Math.floor(rnd() * 4);
+    const n = 5 + Math.floor(rnd() * 3);
     for (let i = 0; i < n; i++) {
       trees.push({
         x: p.x + (rnd() - 0.5) * (p.w - 2),
         z: p.z + (rnd() - 0.5) * (p.d - 2),
         s: 0.8 + rnd() * 0.9,
         tone: rnd(),
+        kind: 'tree',
+      });
+    }
+    // Niskie krzewy przy narożnikach parku: osobna warstwa instancji, bez dodatkowych draw calli.
+    // Są odsunięte od krzyżujących się alejek, więc skwer pozostaje czytelny i przechodni.
+    const edge = p.w * 0.34;
+    for (const [dx, dz] of [[-edge, -edge], [edge, -edge], [-edge, edge], [edge, edge]]) {
+      trees.push({
+        x: p.x + dx + (rnd() - 0.5) * 0.45,
+        z: p.z + dz + (rnd() - 0.5) * 0.45,
+        s: 0.46 + rnd() * 0.2,
+        tone: rnd(),
+        kind: 'shrub',
       });
     }
   }

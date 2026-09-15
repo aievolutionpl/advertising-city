@@ -28,6 +28,7 @@ export function Lights() {
   const hemi = useRef();
   const amb = useRef();
   const scene = useThree((s) => s.scene);
+  const shadowSize = typeof window !== 'undefined' && window.innerWidth <= 820 ? 1024 : 2048;
 
   useFrame(() => {
     const d = dayRuntime.day;
@@ -38,7 +39,11 @@ export function Lights() {
     }
     if (hemi.current) hemi.current.intensity = d.hemiI;
     if (amb.current) amb.current.intensity = d.ambI;
-    if (scene.fog) scene.fog.color.set(d.fog);
+    if (scene.fog) {
+      scene.fog.color.set(d.fog);
+      scene.fog.near = d.fogNear;
+      scene.fog.far = d.fogFar;
+    }
   });
 
   return (
@@ -51,14 +56,17 @@ export function Lights() {
         intensity={2.7}
         color="#fffdf5"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize-width={shadowSize}
+        shadow-mapSize-height={shadowSize}
         shadow-camera-near={20}
         shadow-camera-far={420}
         shadow-camera-left={-95}
         shadow-camera-right={95}
         shadow-camera-top={95}
         shadow-camera-bottom={-95}
-        shadow-bias={-0.0006}
+        shadow-bias={-0.00035}
+        shadow-normalBias={0.035}
+        shadow-radius={2}
       />
       <fog attach="fog" args={['#dde6ee', 130, 340]} />
     </group>
@@ -69,7 +77,25 @@ export function Lights() {
 /** Jedyny driver czasu: postęp doby + wpisanie stanu w materiały. Zegar do HUD max ~2,5×/s. */
 export function DayDriver() {
   const setClock = useCity((s) => s.setClock);
+  const { scene, gl } = useThree();
   const acc = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    window.__cityScene = () => {
+      const named = [];
+      scene.traverse((o) => {
+        if (o.name) named.push({ name: o.name, type: o.type, visible: o.visible, count: o.count ?? null });
+      });
+      return {
+        named,
+        calls: gl.info.render.calls,
+        triangles: gl.info.render.triangles,
+        objects: scene.children.length,
+      };
+    };
+    return () => { delete window.__cityScene; };
+  }, [scene, gl]);
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const rolled = tickRuntime(dt);

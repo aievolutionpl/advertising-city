@@ -119,11 +119,11 @@ export function Trees() {
   }, [data, dummy]);
 
   return (
-    <group>
-      <instancedMesh ref={trunks} args={[trunkGeo, BARK, 400]} castShadow receiveShadow />
-      <instancedMesh ref={broad} args={[leafGeo, LEAF, 900]} castShadow receiveShadow />
-      <instancedMesh ref={pines} args={[coneGeo, PINE, 200]} castShadow receiveShadow />
-      <instancedMesh ref={bushes} args={[bushGeo, BUSH, 400]} castShadow receiveShadow />
+    <group name="zielen-drzewa-iglaki-krzewy">
+      <instancedMesh name="pnie-drzew" ref={trunks} args={[trunkGeo, BARK, 400]} castShadow receiveShadow />
+      <instancedMesh name="korony-lisciaste" ref={broad} args={[leafGeo, LEAF, 900]} castShadow receiveShadow />
+      <instancedMesh name="iglaki" ref={pines} args={[coneGeo, PINE, 200]} castShadow receiveShadow />
+      <instancedMesh name="krzewy-parkowe" ref={bushes} args={[bushGeo, BUSH, 400]} castShadow receiveShadow />
     </group>
   );
 }

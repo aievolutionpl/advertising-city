@@ -3,7 +3,8 @@
 import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { CITY, ROAD_LINES, BLOCK_CENTERS } from '../data/city.js';
+import { CITY } from '../data/city.js';
+import { pedestrianTransform, trafficTransform } from '../lib/cityLogic.js';
 import { headlightMaterial } from './materials.js';
 import { dayRuntime } from './dayRuntime.js';
 
@@ -30,23 +31,18 @@ const PED_BODY = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0
 const PED_SKIN = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.75 });
 const PED_LEGS = new THREE.MeshStandardMaterial({ color: '#2f3540', roughness: 0.85 });
 
-const EXT = () => CITY.extent;
-
-/** Auto i: co druga jezdnia pozioma / pionowa, pas ±2,2 m, własna prędkość — ruch bez zderzeń. */
+/** Auto i: pętla wokół wybranego kwartału, dwa pasy i własna prędkość. */
 function carAt(i, t) {
-  const E = EXT();
-  const line = ROAD_LINES[i % ROAD_LINES.length];
-  const horiz = i % 2 === 0;
-  const dir = (i >> 2) % 2 === 0 ? 1 : -1;
-  const speed = 6.5 + ((i * 37) % 9) * 1.25;
-  const span = 2 * E;
-  const s = ((t * speed + i * 29.7) % span) - E;
-  const lane = line + dir * 2.2;
-  if (horiz) return { x: dir * s, z: lane, yaw: dir > 0 ? 0 : Math.PI };
-  return { x: lane, z: dir * s, yaw: dir > 0 ? -Math.PI / 2 : Math.PI / 2 };
+  const lane = (i >> 1) % 2;
+  const speed = 6.5 + ((i * 37) % 9) * 1.05;
+  const blockIndex = (i * 17 + Math.floor(i / 7) * 5) % (CITY.grid ** 2);
+  const radius = CITY.pitch / 2 + (lane === 0 ? -2.1 : 2.1);
+  const lap = 8 * radius;
+  const p = trafficTransform((t * speed) / lap + i * 0.137, blockIndex, lane);
+  return { x: p.x, z: p.z, yaw: Math.atan2(-p.dirZ, p.dirX) };
 }
 
-export function Cars({ count = 54 }) {
+export function Cars({ count = 68 }) {
   const body = useRef(); const cabin = useRef(); const roof = useRef();
   const wheels = useRef(); const lights = useRef(); const tails = useRef();
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -103,8 +99,8 @@ export function Cars({ count = 54 }) {
   });
 
   return (
-    <group>
-      <instancedMesh ref={body} args={[bodyGeo, BODY, count]} castShadow />
+    <group name="ruch-uliczny-68-aut">
+      <instancedMesh name="auta-nadwozia" ref={body} args={[bodyGeo, BODY, count]} castShadow />
       <instancedMesh ref={cabin} args={[cabinGeo, DARK, count]} castShadow />
       <instancedMesh ref={roof} args={[roofGeo, ROOFMAT, count]} castShadow />
       <instancedMesh ref={wheels} args={[wheelGeo, WHEEL, count * 4]} />
@@ -114,21 +110,16 @@ export function Cars({ count = 54 }) {
   );
 }
 
-/** Pieszy i: chodnik wokół kwartału, ±9,6 m od osi kwartału (nie wchodzi w budynki). */
+/** Pieszy i: zamknięta trasa po chodniku konkretnego kwartału. */
 function pedAt(i, t) {
-  const E = EXT();
-  const center = BLOCK_CENTERS[i % BLOCK_CENTERS.length];
-  const side = (i >> 2) % 2 === 0 ? 9.6 : -9.6;
-  const horiz = i % 2 === 0;
-  const dir = (i >> 3) % 2 === 0 ? 1 : -1;
-  const speed = 1.25 + ((i * 13) % 7) * 0.16;
-  const span = 2 * E;
-  const s = ((t * speed + i * 17.3) % span) - E;
-  if (horiz) return { x: dir * s, z: center + side, yaw: dir > 0 ? -Math.PI / 2 : Math.PI / 2 };
-  return { x: center + side, z: dir * s, yaw: dir > 0 ? Math.PI : 0 };
+  const speed = 1.15 + ((i * 13) % 7) * 0.14;
+  const lap = 8 * (CITY.block / 2 + 1);
+  const blockIndex = (i * 19 + Math.floor(i / 11)) % (CITY.grid ** 2);
+  const p = pedestrianTransform((t * speed) / lap, blockIndex, (i * 0.173) % 1);
+  return { x: p.x, z: p.z, yaw: Math.atan2(p.dirX, p.dirZ) };
 }
 
-export function Pedestrians({ count = 120 }) {
+export function Pedestrians({ count = 144 }) {
   const torso = useRef(); const head = useRef(); const legs = useRef();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const c = useMemo(() => new THREE.Color(), []);
@@ -171,8 +162,8 @@ export function Pedestrians({ count = 120 }) {
   });
 
   return (
-    <group>
-      <instancedMesh ref={torso} args={[torsoGeo, PED_BODY, count]} castShadow />
+    <group name="piesi-144-zamkniete-trasy">
+      <instancedMesh name="piesi-tulowia" ref={torso} args={[torsoGeo, PED_BODY, count]} castShadow />
       <instancedMesh ref={head} args={[headGeo, PED_SKIN, count]} castShadow />
       <instancedMesh ref={legs} args={[legGeo, PED_LEGS, count * 2]} />
     </group>
